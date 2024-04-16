@@ -25,7 +25,7 @@ build_webcoin:
 	@echo Building webcoin binary...
 	cd .. && set GOOS=linux&& set GOARCH=amd64&& set CGO_ENABLED=0 && go build -o ${WEBCOIN_BINARY} ./cmd/webcoin
 	@echo Done
-	
+
 ## lint: runs golangci-lint on the app
 lint:
-	cd cmd/webcoin && golangci-lint run 
+	cd ../cmd/webcoin && golangci-lint run 
