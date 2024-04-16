@@ -16,8 +16,9 @@ func main() {
 		Handler:           routes(),
 		ReadHeaderTimeout: 3 * time.Second,
 	}
-	fmt.Println(srv.Addr)
+	log.Println(srv.Addr)
 	err := srv.ListenAndServe()
+
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
@@ -32,7 +33,6 @@ func routes() http.Handler {
 	return mux
 }
 
-func ping(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("here")
+func ping(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprintln(w, "Hello world!")
 }
