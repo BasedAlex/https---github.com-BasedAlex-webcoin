@@ -17,8 +17,9 @@ func main() {
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 	log.Println(srv.Addr)
+
 	if err := srv.ListenAndServe(); err != nil {
-		log.Println(err)
+		log.Printf("error starting server: %s", err)
 		os.Exit(1)
 	}
 }
