@@ -1,0 +1,26 @@
+version: '3.9'
+services:
+
+  webcoin-service:
+    build:
+      context: ./..
+      dockerfile: ./webcoin-service.dockerfile
+    restart: always
+    ports:
+      - "8080:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  postgres:
+    image: 'postgres:14.2'
+    ports:
+      - "5438:5432"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: webcoin-pg
