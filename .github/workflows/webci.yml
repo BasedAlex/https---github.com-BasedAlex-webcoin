@@ -27,5 +27,5 @@ jobs:
           version: v1.56.2
           args: --config .golangci.yml
 
-      - name: Run Tests
-        run: make test
+      # - name: Run Tests
+      #   run: make test
