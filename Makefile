@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 WEBCOIN_BINARY=webcoinApp
 
 ## up: starts all containers in the background without forcing build
@@ -32,4 +34,4 @@ run:
 
 ## lint: runs golangci-lint on the app
 lint:
-	cd cmd/webcoin && golangci-lint run 
+	golangci-lint run ./..
