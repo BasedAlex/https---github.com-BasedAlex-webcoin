@@ -32,4 +32,4 @@ run:
 
 ## lint: runs golangci-lint on the app
 lint:
-	cd cmd/webcoin && golangci-lint run 
+	golangci-lint run ./..
