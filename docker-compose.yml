@@ -3,8 +3,8 @@ services:
 
   webcoin-service:
     build:
-      context: ./..
-      dockerfile: ./webcoin-service.dockerfile
+      context: ./
+      dockerfile: ./Dockerfile
     restart: always
     ports:
       - "8080:80"
