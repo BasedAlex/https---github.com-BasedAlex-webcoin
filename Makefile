@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 WEBCOIN_BINARY=webcoinApp
 
 ## up: starts all containers in the background without forcing build
