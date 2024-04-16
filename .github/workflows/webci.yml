@@ -19,7 +19,7 @@ jobs:
           go-version: '1.22'
 
       - name: Build
-        run: make up_build
+        run: make build_webcoin
 
       - name: Run Linter
         uses: golangci/golangci-lint-action@v4
