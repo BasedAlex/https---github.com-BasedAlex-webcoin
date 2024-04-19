@@ -1,37 +1,52 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"errors"
+	"os/signal"
+
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/basedalex/webcoin/internal/config"
+	"github.com/basedalex/webcoin/internal/db"
+	"github.com/basedalex/webcoin/internal/router"
+	log "github.com/sirupsen/logrus"
 )
 
-const addr = "80"
-
 func main() {
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	cfg := config.New()
+
+	dbCtx, cancel := context.WithTimeout(ctx, time.Duration(cfg.Env.DBCancel)*time.Second)
+	defer cancel()
+
+	database, err := db.NewPostgres(dbCtx, cfg.Env.DBConn)
+	if err != nil {
+		log.Println(err)
+		log.Exit(1)
+	}
+	log.Println("connected to db")
+
 	srv := &http.Server{
-		Addr:              ":" + addr,
-		Handler:           routes(),
+		Addr:              ":" + cfg.Env.Port,
+		Handler:           router.New(database),
 		ReadHeaderTimeout: 3 * time.Second,
 	}
-	log.Println(srv.Addr)
 
-	if err := srv.ListenAndServe(); err != nil {
+	go func(){
+		<-ctx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second * 15)
+		defer cancel()
+		srv.Shutdown(shutdownCtx)
+	}()
+
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Printf("error starting server: %s", err)
 		os.Exit(1)
 	}
-}
-
-func routes() http.Handler {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/hello", ping)
-
-	return mux
-}
-
-func ping(w http.ResponseWriter, _ *http.Request) {
-	fmt.Fprintln(w, "Hello world!")
 }

@@ -16,11 +16,11 @@ down:
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
 up_build: build_webcoin
-	@echo Stopping docker images (if running...)
+	@echo "Stopping docker images (if running...)"
 	docker-compose down
-	@echo Building (when requireed) and starting docker images...
+	@echo "Building (when requireed) and starting docker images..."
 	docker-compose up --build -d 
-	@echo Docker images built and started!
+	@echo "Docker images built and started!"
 
 ## build_webcoin: builds the webcoin binary as a linux executable
 build_webcoin:
@@ -34,4 +34,4 @@ run:
 
 ## lint: runs golangci-lint on the app
 lint:
-	golangci-lint run ./..
+	golangci-lint run ./... --fix
