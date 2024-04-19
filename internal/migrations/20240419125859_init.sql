@@ -14,5 +14,5 @@ CREATE TABLE persons (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE person;
+DROP TABLE persons;
 -- +goose StatementEnd

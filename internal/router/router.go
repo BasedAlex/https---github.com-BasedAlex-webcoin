@@ -1,6 +1,8 @@
 package router
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/basedalex/webcoin/internal/db"
@@ -23,5 +25,20 @@ func New(database *db.Postgres) *chi.Mux {
 }
 
 func (h *Handler) postPerson(w http.ResponseWriter, r *http.Request) {
-	
+	var person db.Person
+
+	err := json.NewDecoder(r.Body).Decode(&person)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	ctx := context.TODO()
+
+	err = h.Database.CreatePerson(ctx, person)
+	if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+	w.WriteHeader(http.StatusCreated)
 }
