@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 	"errors"
-	"os/signal"
-
 	"net/http"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/basedalex/webcoin/internal/config"
@@ -16,7 +15,6 @@ import (
 )
 
 func main() {
-
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
@@ -30,6 +28,7 @@ func main() {
 		log.Println(err)
 		log.Exit(1)
 	}
+
 	log.Println("connected to db")
 
 	srv := &http.Server{
@@ -38,15 +37,22 @@ func main() {
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
-	go func(){
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+
+	go func() {
 		<-ctx.Done()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second * 15)
+
 		defer cancel()
-		srv.Shutdown(shutdownCtx)
+
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			log.Print(err)
+			os.Exit(1)
+		}
 	}()
 
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Printf("error starting server: %s", err)
-		os.Exit(1)
+
+		return
 	}
 }

@@ -1,7 +1,6 @@
 package router
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
@@ -17,6 +16,7 @@ func New(database *db.Postgres) *chi.Mux {
 	handler := &Handler{
 		Database: database,
 	}
+
 	r := chi.NewRouter()
 
 	r.Post("/person", handler.postPerson)
@@ -28,17 +28,16 @@ func (h *Handler) postPerson(w http.ResponseWriter, r *http.Request) {
 	var person db.Person
 
 	err := json.NewDecoder(r.Body).Decode(&person)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
-	ctx := context.TODO()
-
-	err = h.Database.CreatePerson(ctx, person)
+	err = h.Database.CreatePerson(r.Context(), person)
 	if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 }
