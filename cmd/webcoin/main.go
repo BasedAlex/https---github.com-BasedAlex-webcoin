@@ -1,37 +1,31 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
+	"context"
 	"os"
-	"time"
+	"os/signal"
+
+	"github.com/basedalex/webcoin/internal/config"
+	"github.com/basedalex/webcoin/internal/db"
+	"github.com/basedalex/webcoin/internal/router"
+	log "github.com/sirupsen/logrus"
 )
 
-const addr = "80"
-
 func main() {
-	srv := &http.Server{
-		Addr:              ":" + addr,
-		Handler:           routes(),
-		ReadHeaderTimeout: 3 * time.Second,
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	cfg := config.New()
+
+	database, err := db.NewPostgres(ctx, cfg.Env.PGDSN)
+	if err != nil {
+		log.Panic(err)
 	}
-	log.Println(srv.Addr)
 
-	if err := srv.ListenAndServe(); err != nil {
-		log.Printf("error starting server: %s", err)
-		os.Exit(1)
+	log.Info("connected to db")
+
+	err = router.NewServer(ctx, cfg, database)
+	if err != nil {
+		log.Panic(err)
 	}
-}
-
-func routes() http.Handler {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/hello", ping)
-
-	return mux
-}
-
-func ping(w http.ResponseWriter, _ *http.Request) {
-	fmt.Fprintln(w, "Hello world!")
 }
