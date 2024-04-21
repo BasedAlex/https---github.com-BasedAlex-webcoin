@@ -10,7 +10,7 @@ type Config struct {
 }
 
 type EnvSetting struct {
-	DBConn   string `env:"DB_CONNECTION"`
+	PGDSN    string `env:"PG_DSN"`
 	DBCancel int    `env:"DB_CANCEL"`
 	Port     string `env:"PORT"`
 }

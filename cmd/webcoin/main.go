@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -23,36 +21,15 @@ func main() {
 	dbCtx, cancel := context.WithTimeout(ctx, time.Duration(cfg.Env.DBCancel)*time.Second)
 	defer cancel()
 
-	database, err := db.NewPostgres(dbCtx, cfg.Env.DBConn)
+	database, err := db.NewPostgres(dbCtx, cfg.Env.PGDSN)
 	if err != nil {
-		log.Println(err)
-		log.Exit(1)
+		log.Panic(err)
 	}
 
-	log.Println("connected to db")
+	log.Info("connected to db")
 
-	srv := &http.Server{
-		Addr:              ":" + cfg.Env.Port,
-		Handler:           router.New(database),
-		ReadHeaderTimeout: 3 * time.Second,
-	}
-
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second*15)
-
-	go func() {
-		<-ctx.Done()
-
-		defer cancel()
-
-		if err := srv.Shutdown(shutdownCtx); err != nil {
-			log.Print(err)
-			os.Exit(1)
-		}
-	}()
-
-	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Printf("error starting server: %s", err)
-
-		return
+	err = router.NewServer(ctx, cfg, database)
+	if err != nil {
+		log.Panic(err)
 	}
 }
