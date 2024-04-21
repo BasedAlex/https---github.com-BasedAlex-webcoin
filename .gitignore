@@ -1,4 +1,4 @@
 webcoinApp
 *.env
-.idea
-.vscode
+.idea/
+*.vscode
