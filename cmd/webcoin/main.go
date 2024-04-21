@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/basedalex/webcoin/internal/config"
 	"github.com/basedalex/webcoin/internal/db"
@@ -18,10 +17,7 @@ func main() {
 
 	cfg := config.New()
 
-	dbCtx, cancel := context.WithTimeout(ctx, time.Duration(cfg.Env.DBCancel)*time.Second)
-	defer cancel()
-
-	database, err := db.NewPostgres(dbCtx, cfg.Env.PGDSN)
+	database, err := db.NewPostgres(ctx, cfg.Env.PGDSN)
 	if err != nil {
 		log.Panic(err)
 	}
