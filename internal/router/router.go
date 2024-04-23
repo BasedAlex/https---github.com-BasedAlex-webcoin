@@ -14,7 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewServer(ctx context.Context, cfg *config.Config, service serviceLayer) error {
+func NewServer(ctx context.Context, cfg *config.Config, service personService) error {
 	srv := &http.Server{
 		Addr:              ":" + cfg.Env.Port,
 		Handler:           newRouter(service),
@@ -40,12 +40,12 @@ func NewServer(ctx context.Context, cfg *config.Config, service serviceLayer) er
 	return nil
 }
 
-type serviceLayer interface {
+type personService interface {
 	CreatePerson(ctx context.Context, p db.Person) (db.Person, error)
 }
 
 type Handler struct {
-	Service serviceLayer
+	service personService
 }
 
 type HTTPResponse struct {
@@ -53,9 +53,9 @@ type HTTPResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
-func newRouter(service serviceLayer) *chi.Mux {
+func newRouter(service personService) *chi.Mux {
 	handler := &Handler{
-		Service: service,
+		service: service,
 	}
 
 	r := chi.NewRouter()
@@ -75,14 +75,14 @@ func (h *Handler) createPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newperson, err := h.Service.CreatePerson(r.Context(), person)
+	newPerson, err := h.service.CreatePerson(r.Context(), person)
 	if err != nil {
 		writeErrResponse(w, err, http.StatusInternalServerError)
 
 		return
 	}
 
-	writeOkResponse(w, http.StatusCreated, newperson)
+	writeOkResponse(w, http.StatusCreated, newPerson)
 }
 
 func writeOkResponse(w http.ResponseWriter, statusCode int, data any) {
