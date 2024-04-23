@@ -14,10 +14,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewServer(ctx context.Context, cfg *config.Config, database *db.Postgres) error {
+func NewServer(ctx context.Context, cfg *config.Config, service serviceLayer) error {
 	srv := &http.Server{
 		Addr:              ":" + cfg.Env.Port,
-		Handler:           newRouter(database),
+		Handler:           newRouter(service),
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
@@ -40,12 +40,13 @@ func NewServer(ctx context.Context, cfg *config.Config, database *db.Postgres) e
 	return nil
 }
 
-type personStore interface {
+type serviceLayer interface {
+	// FindPerson(ctx, p db.Person) (db.Person, error)
 	CreatePerson(ctx context.Context, p db.Person) (db.Person, error)
 }
 
 type Handler struct {
-	Database personStore
+	Service serviceLayer
 }
 
 type HTTPResponse struct {
@@ -53,9 +54,9 @@ type HTTPResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
-func newRouter(database personStore) *chi.Mux {
+func newRouter(service serviceLayer) *chi.Mux {
 	handler := &Handler{
-		Database: database,
+		Service: service,
 	}
 
 	r := chi.NewRouter()
@@ -75,7 +76,7 @@ func (h *Handler) createPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newperson, err := h.Database.CreatePerson(r.Context(), person)
+	newperson, err := h.Service.CreatePerson(r.Context(), person)
 	if err != nil {
 		writeErrResponse(w, err, http.StatusInternalServerError)
 
