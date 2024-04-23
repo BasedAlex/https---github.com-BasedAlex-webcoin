@@ -33,12 +33,12 @@ func NewPostgres(ctx context.Context, dbConnect string) (*Postgres, error) {
 }
 
 type Person struct {
-	ID         int       `json:"id"`
+	ID         int       `json:"id,omitempty"`
 	FirstName  string    `json:"firstName"`
 	LastName   string    `json:"lastName"`
-	Patronymic string    `json:"patronymic"`
-	Sex        string    `json:"sex"`
-	Country    string    `json:"country"`
+	Patronymic string    `json:"patronymic,omitempty"`
+	Sex        string    `json:"sex,omitempty"`
+	Country    string    `json:"country,omitempty"`
 	CreatedAt  time.Time `json:"createdAt"`
 	UpdatedAt  time.Time `json:"updatedAat"`
 }
@@ -81,7 +81,12 @@ func (db *Postgres) FindPerson(ctx context.Context, p Person) (Person, error) {
 
 	person, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Person])
 	if err != nil {
-		return Person{}, fmt.Errorf("error collecting rows: %w", err)
+		person, err := db.CreatePerson(ctx, p)
+		if err != nil {
+			return Person{}, err
+		}
+
+		return person, nil
 	}
 
 	return person, nil

@@ -24,6 +24,9 @@ func New(database personStore) *Service {
 
 func (s *Service) CreatePerson(ctx context.Context, p db.Person) (db.Person, error) {
 	newperson, err := s.Database.FindPerson(ctx, p)
+	if err != nil {
+		return db.Person{}, fmt.Errorf("error creating person %w", err)
+	}
 
-	return newperson, fmt.Errorf("error creating person %w", err)
+	return newperson, nil
 }
