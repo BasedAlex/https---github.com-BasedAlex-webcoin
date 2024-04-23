@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/basedalex/webcoin/internal/config"
@@ -31,7 +30,6 @@ func NewServer(ctx context.Context, cfg *config.Config, database *db.Postgres) e
 
 		if err := srv.Shutdown(shutdownCtx); err != nil {
 			log.Warn(err)
-			os.Exit(1)
 		}
 	}()
 
@@ -43,33 +41,28 @@ func NewServer(ctx context.Context, cfg *config.Config, database *db.Postgres) e
 }
 
 type personStore interface {
-	CreatePerson(ctx context.Context, p db.Person) error
+	CreatePerson(ctx context.Context, p db.Person) (db.Person, error)
 }
 
 type Handler struct {
 	Database personStore
 }
 
-func newRouter(database *db.Postgres) *chi.Mux {
+type HTTPResponse struct {
+	Data  any    `json:"data,omitempty"`
+	Error string `json:"error,omitempty"`
+}
+
+func newRouter(database personStore) *chi.Mux {
 	handler := &Handler{
 		Database: database,
 	}
 
 	r := chi.NewRouter()
 
-	r.Get("/ping", ping)
-
-	r.Post("/person", handler.createPerson)
+	r.Post("/api/v1/person", handler.createPerson)
 
 	return r
-}
-
-func ping(w http.ResponseWriter, _ *http.Request) {
-	_, err := fmt.Fprintf(w, "hello")
-	if err != nil {
-		log.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
 }
 
 func (h *Handler) createPerson(w http.ResponseWriter, r *http.Request) {
@@ -77,15 +70,39 @@ func (h *Handler) createPerson(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&person)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-
-	err = h.Database.CreatePerson(r.Context(), person)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeErrResponse(w, err, http.StatusBadRequest)
 
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	newperson, err := h.Database.CreatePerson(r.Context(), person)
+	if err != nil {
+		writeErrResponse(w, err, http.StatusInternalServerError)
+
+		return
+	}
+
+	writeOkResponse(w, http.StatusCreated, newperson)
+}
+
+func writeOkResponse(w http.ResponseWriter, statusCode int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+
+	err := json.NewEncoder(w).Encode(HTTPResponse{Data: data})
+	if err != nil {
+		log.Warn(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func writeErrResponse(w http.ResponseWriter, err error, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	log.Warn(err)
+
+	jsonErr := json.NewEncoder(w).Encode(HTTPResponse{Error: err.Error()})
+	if jsonErr != nil {
+		log.Warn(jsonErr)
+	}
 }

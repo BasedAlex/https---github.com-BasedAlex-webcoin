@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -32,7 +33,7 @@ func NewPostgres(ctx context.Context, dbConnect string) (*Postgres, error) {
 }
 
 type Person struct {
-	ID         int       `json:"int"`
+	ID         int       `json:"id"`
 	FirstName  string    `json:"firstName"`
 	LastName   string    `json:"lastName"`
 	Patronymic string    `json:"patronymic"`
@@ -42,16 +43,24 @@ type Person struct {
 	UpdatedAt  time.Time `json:"updatedAat"`
 }
 
-func (db *Postgres) CreatePerson(ctx context.Context, p Person) error {
+func (db *Postgres) CreatePerson(ctx context.Context, p Person) (Person, error) {
 	stmt := `
 	INSERT INTO persons
 	(first_name, last_name, patronymic, sex, country, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7);`
+	VALUES ($1, $2, $3, $4, $5, $6, $7)
+	RETURNING id, first_name, last_name, patronymic, sex, country, created_at, updated_at;`
 
-	_, err := db.db.Exec(ctx, stmt, p.FirstName, p.LastName, p.Patronymic, p.Sex, p.Country, time.Now(), time.Now())
+	rows, err := db.db.Query(ctx, stmt,
+		p.FirstName, p.LastName, p.Patronymic,
+		p.Sex, p.Country, time.Now(), time.Now())
 	if err != nil {
-		return fmt.Errorf("error in database: %w", err)
+		return Person{}, fmt.Errorf("error in database: %w", err)
 	}
 
-	return nil
+	person, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Person])
+	if err != nil {
+		return Person{}, fmt.Errorf("error collecting rows: %w", err)
+	}
+
+	return person, nil
 }
