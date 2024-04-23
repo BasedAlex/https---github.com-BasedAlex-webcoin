@@ -97,7 +97,12 @@ func writeOkResponse(w http.ResponseWriter, statusCode int, data any) {
 }
 
 func writeErrResponse(w http.ResponseWriter, err error, statusCode int) {
-	log.Error(err)
 	w.Header().Set("Content-Type", "application/json")
-	http.Error(w, err.Error(), statusCode)
+	w.WriteHeader(statusCode)
+	log.Warn(err)
+
+	jsonErr := json.NewEncoder(w).Encode(HTTPResponse{Error: err.Error()})
+	if jsonErr != nil {
+		log.Warn(jsonErr)
+	}
 }
