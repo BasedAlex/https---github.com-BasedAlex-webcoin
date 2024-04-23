@@ -60,7 +60,7 @@ func newRouter(service serviceLayer) *chi.Mux {
 
 	r := chi.NewRouter()
 
-	r.Post("/api/v1/person", handler.createPerson)
+	r.Get("/api/v1/person", handler.createPerson)
 
 	return r
 }
