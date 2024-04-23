@@ -70,34 +70,34 @@ func (h *Handler) createPerson(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&person)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeErrResponse(w, err, http.StatusBadRequest)
 
 		return
 	}
 
 	newperson, err := h.Database.CreatePerson(r.Context(), person)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error(err)
+		writeErrResponse(w, err, http.StatusInternalServerError)
 
 		return
 	}
 
-	res, err := json.Marshal(newperson)
+	writeOkResponse(w, http.StatusCreated, newperson)
+}
+
+func writeOkResponse(w http.ResponseWriter, statusCode int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+
+	err := json.NewEncoder(w).Encode(HTTPResponse{Data: data})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error(err)
-
-		return
+		log.Warn(err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
+}
 
-	w.WriteHeader(http.StatusCreated)
-
-	tag, err := w.Write(res)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Error(tag, err)
-
-		return
-	}
+func writeErrResponse(w http.ResponseWriter, err error, statusCode int) {
+	log.Error(err)
+	w.Header().Set("Content-Type", "application/json")
+	http.Error(w, err.Error(), statusCode)
 }

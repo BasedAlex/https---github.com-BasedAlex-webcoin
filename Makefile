@@ -35,3 +35,5 @@ run:
 ## lint: runs golangci-lint on the app
 lint:
 	golangci-lint run ./... --fix
+
+run_build: build_webcoin run
