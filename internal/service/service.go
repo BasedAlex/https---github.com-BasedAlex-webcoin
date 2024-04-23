@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/basedalex/webcoin/internal/db"
 )
 
 type personStore interface {
-	CreatePerson(ctx context.Context, p db.Person) (db.Person, error)
+	FindPerson(ctx context.Context, p db.Person) (db.Person, error)
+	// CreatePerson(ctx context.Context, p db.Person) (db.Person, error)
 }
 
 type Service struct {
@@ -21,9 +23,7 @@ func New(database personStore) *Service {
 }
 
 func (s *Service) CreatePerson(ctx context.Context, p db.Person) (db.Person, error) {
+	newperson, err := s.Database.FindPerson(ctx, p)
 
-	newperson, err := s.Database.CreatePerson(ctx, p)
-
-	return newperson, err
+	return newperson, fmt.Errorf("error creating person %w", err)
 }
-

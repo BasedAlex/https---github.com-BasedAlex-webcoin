@@ -41,7 +41,6 @@ func NewServer(ctx context.Context, cfg *config.Config, service serviceLayer) er
 }
 
 type serviceLayer interface {
-	// FindPerson(ctx, p db.Person) (db.Person, error)
 	CreatePerson(ctx context.Context, p db.Person) (db.Person, error)
 }
 
