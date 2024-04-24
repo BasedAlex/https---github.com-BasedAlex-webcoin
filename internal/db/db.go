@@ -83,10 +83,9 @@ func (db *Postgres) GetPerson(ctx context.Context, p Person) (Person, error) {
 	switch {
 	case errors.Is(err, pgx.ErrNoRows):
 		return person, ErrPersonNotFound
-	case err != nil: 
-		return person, fmt.Errorf("error collecting person row: %w", err) 
+	case err != nil:
+		return person, fmt.Errorf("error collecting person row: %w", err)
 	}
-
 
 	return person, nil
 }

@@ -32,10 +32,9 @@ func (s *Service) CreatePerson(ctx context.Context, p db.Person) (db.Person, err
 		if err != nil {
 			return db.Person{}, fmt.Errorf("error creating person %w", err)
 		}
-	case err != nil: 
+	case err != nil:
 		return db.Person{}, fmt.Errorf("error getting person %w", err)
 	}
-
 
 	return person, nil
 }

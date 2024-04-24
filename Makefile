@@ -32,8 +32,20 @@ build_webcoin:
 run:
 	./${WEBCOIN_BINARY}
 
+## installs tools for linting
+tools:
+	go install github.com/daixiang0/gci@latest
+	go install mvdan.cc/gofumpt@latest
+
 ## lint: runs golangci-lint on the app
 lint:
-	golangci-lint run ./... --fix
+	go mod tidy
+	gofumpt -w .
+	gci write . --skip-generated -s standard -s default
+	golangci-lint run ./...
 
+## runs lint and tool install
+run_lint: tools lint
+
+## builds and runs the app
 run_build: build_webcoin run
