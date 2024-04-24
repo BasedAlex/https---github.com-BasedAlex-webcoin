@@ -8,6 +8,7 @@ import (
 	"github.com/basedalex/webcoin/internal/config"
 	"github.com/basedalex/webcoin/internal/db"
 	"github.com/basedalex/webcoin/internal/router"
+	"github.com/basedalex/webcoin/internal/service"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,9 +23,11 @@ func main() {
 		log.Panic(err)
 	}
 
+	service := service.New(database)
+
 	log.Info("connected to db")
 
-	err = router.NewServer(ctx, cfg, database)
+	err = router.NewServer(ctx, cfg, service)
 	if err != nil {
 		log.Panic(err)
 	}

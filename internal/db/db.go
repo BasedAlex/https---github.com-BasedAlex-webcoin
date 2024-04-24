@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -60,6 +61,30 @@ func (db *Postgres) CreatePerson(ctx context.Context, p Person) (Person, error) 
 	person, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[Person])
 	if err != nil {
 		return Person{}, fmt.Errorf("error collecting rows: %w", err)
+	}
+
+	return person, nil
+}
+
+func (db *Postgres) GetPerson(ctx context.Context, p Person) (Person, error) {
+	stmt := `SELECT 
+	(id, first_name, last_name, patronymic, 
+	sex, country, created_at, updated_at)
+	FROM persons
+	WHERE first_name = $1 AND last_name = $2;`
+
+	rows, err := db.db.Query(ctx, stmt, p.FirstName, p.LastName)
+	if err != nil {
+		return Person{}, fmt.Errorf("error querying person: %w", err)
+	}
+
+	person, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[Person])
+
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+		return person, ErrPersonNotFound
+	case err != nil:
+		return person, fmt.Errorf("error collecting person row: %w", err)
 	}
 
 	return person, nil

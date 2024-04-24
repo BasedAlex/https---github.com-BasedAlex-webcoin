@@ -14,10 +14,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewServer(ctx context.Context, cfg *config.Config, database *db.Postgres) error {
+func NewServer(ctx context.Context, cfg *config.Config, service personService) error {
 	srv := &http.Server{
 		Addr:              ":" + cfg.Env.Port,
-		Handler:           newRouter(database),
+		Handler:           newRouter(service),
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
@@ -40,12 +40,12 @@ func NewServer(ctx context.Context, cfg *config.Config, database *db.Postgres) e
 	return nil
 }
 
-type personStore interface {
+type personService interface {
 	CreatePerson(ctx context.Context, p db.Person) (db.Person, error)
 }
 
 type Handler struct {
-	Database personStore
+	service personService
 }
 
 type HTTPResponse struct {
@@ -53,14 +53,14 @@ type HTTPResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
-func newRouter(database personStore) *chi.Mux {
+func newRouter(service personService) *chi.Mux {
 	handler := &Handler{
-		Database: database,
+		service: service,
 	}
 
 	r := chi.NewRouter()
 
-	r.Post("/api/v1/person", handler.createPerson)
+	r.Get("/api/v1/person", handler.createPerson)
 
 	return r
 }
@@ -75,14 +75,14 @@ func (h *Handler) createPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newperson, err := h.Database.CreatePerson(r.Context(), person)
+	newPerson, err := h.service.CreatePerson(r.Context(), person)
 	if err != nil {
 		writeErrResponse(w, err, http.StatusInternalServerError)
 
 		return
 	}
 
-	writeOkResponse(w, http.StatusCreated, newperson)
+	writeOkResponse(w, http.StatusCreated, newPerson)
 }
 
 func writeOkResponse(w http.ResponseWriter, statusCode int, data any) {
