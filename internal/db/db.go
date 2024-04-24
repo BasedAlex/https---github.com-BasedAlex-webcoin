@@ -34,12 +34,12 @@ func NewPostgres(ctx context.Context, dbConnect string) (*Postgres, error) {
 }
 
 type Person struct {
-	ID         int       `json:"id,omitempty"`
+	ID         int       `json:"id"`
 	FirstName  string    `json:"firstName"`
 	LastName   string    `json:"lastName"`
-	Patronymic string    `json:"patronymic,omitempty"`
-	Sex        string    `json:"sex,omitempty"`
-	Country    string    `json:"country,omitempty"`
+	Patronymic string    `json:"patronymic"`
+	Sex        string    `json:"sex"`
+	Country    string    `json:"country"`
 	CreatedAt  time.Time `json:"createdAt"`
 	UpdatedAt  time.Time `json:"updatedAat"`
 }
